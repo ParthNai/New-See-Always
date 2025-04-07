@@ -231,6 +231,152 @@ def list_users():
     users = User.query.all()
     return render_template('admin/users.html', users=users)
 
+@app.route('/admin/users/add', methods=['GET', 'POST'])
+@login_required
+def add_new_user():
+    if current_user.role != 'admin':
+        flash('Access denied. Admin privileges required.')
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        role = request.form.get('role')
+        name = request.form.get('name')
+        
+        if User.query.filter_by(username=username).first():
+            flash('Username already exists')
+            return redirect(url_for('add_new_user'))
+        
+        user = User(
+            username=username,
+            email=email,
+            password=generate_password_hash(password),
+            role=role
+        )
+        
+        try:
+            db.session.add(user)
+            db.session.commit()
+            flash('User added successfully!')
+        except:
+            db.session.rollback()
+            flash('Error adding user')
+        
+        return redirect(url_for('admin_dashboard'))
+    
+    return render_template('admin/add_user.html')
+
+@app.route('/admin/users/bulk-upload', methods=['GET', 'POST'])
+@login_required
+def bulk_upload_users():
+    if current_user.role != 'admin':
+        flash('Access denied. Admin privileges required.')
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file uploaded')
+            return redirect(url_for('bulk_upload_users'))
+        
+        file = request.files['file']
+        if file.filename == '':
+            flash('No file selected')
+            return redirect(url_for('bulk_upload_users'))
+        
+        if not file.filename.endswith('.csv'):
+            flash('Please upload a CSV file')
+            return redirect(url_for('bulk_upload_users'))
+        
+        try:
+            # Process CSV file
+            import csv
+            import io
+            stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+            csv_data = csv.DictReader(stream)
+            
+            for row in csv_data:
+                user = User(
+                    username=row['username'],
+                    email=row['email'],
+                    password=generate_password_hash(row['password']),
+                    role=row['role']
+                )
+                db.session.add(user)
+            
+            db.session.commit()
+            flash('Users imported successfully!')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error importing users: {str(e)}')
+        
+        return redirect(url_for('admin_dashboard'))
+    
+    return render_template('admin/bulk_upload.html')
+
+@app.route('/admin/users/manage')
+@login_required
+def manage_users():
+    if current_user.role != 'admin':
+        flash('Access denied. Admin privileges required.')
+        return redirect(url_for('index'))
+    
+    users = User.query.filter(User.role != 'admin').all()
+    return render_template('admin/manage_users.html', users=users)
+
+@app.route('/admin/results/upload', methods=['GET', 'POST'])
+@login_required
+def upload_results():
+    if current_user.role != 'admin':
+        flash('Access denied. Admin privileges required.')
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file uploaded')
+            return redirect(url_for('upload_results'))
+        
+        file = request.files['file']
+        if file.filename == '':
+            flash('No file selected')
+            return redirect(url_for('upload_results'))
+        
+        try:
+            # Process results file
+            flash('Results uploaded successfully!')
+        except Exception as e:
+            flash(f'Error uploading results: {str(e)}')
+        
+        return redirect(url_for('admin_dashboard'))
+    
+    return render_template('admin/upload_results.html')
+
+@app.route('/admin/results/view')
+@login_required
+def view_results():
+    if current_user.role != 'admin':
+        flash('Access denied. Admin privileges required.')
+        return redirect(url_for('index'))
+    
+    results = []  # Get results from database
+    return render_template('admin/view_results.html', results=results)
+
+@app.route('/admin/departments/search', methods=['GET', 'POST'])
+@login_required
+def search_departments():
+    if current_user.role != 'admin':
+        flash('Access denied. Admin privileges required.')
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        search_term = request.form.get('search')
+        departments = []  # Search departments in database
+        return render_template('admin/departments.html', departments=departments)
+    
+    departments = []  # Get all departments
+    return render_template('admin/departments.html', departments=departments)
+
 @app.route('/logout')
 @login_required
 def logout():

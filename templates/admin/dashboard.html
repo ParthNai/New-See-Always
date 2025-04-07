@@ -1,157 +1,294 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="admin-header">
-    <h1>Admin Dashboard</h1>
-    <div class="admin-actions">
-        <button class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Add User
-        </button>
-        <button class="btn btn-success">
-            <i class="bi bi-upload"></i> Upload Result
-        </button>
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2">Admin Dashboard</h1>
+        <div>
+            <a href="{{ url_for('add_new_user') }}" class="btn btn-primary me-2">
+                <i class="bi bi-person-plus"></i> ADD USER
+            </a>
+            <a href="{{ url_for('upload_results') }}" class="btn btn-success">
+                <i class="bi bi-upload"></i> UPLOAD RESULT
+            </a>
+        </div>
     </div>
-</div>
 
-<!-- Stats Cards -->
-<div class="stats-container">
-    <div class="stats-card" style="border-left: 4px solid #4e73df;">
-        <div class="stats-icon">
-            <i class="bi bi-people-fill"></i>
-        </div>
-        <div class="stats-info">
-            <h3>TOTAL STUDENTS</h3>
-            <div class="number">0</div>
-        </div>
-    </div>
-    
-    <div class="stats-card" style="border-left: 4px solid #1cc88a;">
-        <div class="stats-icon">
-            <i class="bi bi-journal-check"></i>
-        </div>
-        <div class="stats-info">
-            <h3>TOTAL RESULTS</h3>
-            <div class="number">0</div>
-        </div>
-    </div>
-    
-    <div class="stats-card" style="border-left: 4px solid #36b9cc;">
-        <div class="stats-icon">
-            <i class="bi bi-clock-history"></i>
-        </div>
-        <div class="stats-info">
-            <h3>RECENT RESULTS</h3>
-            <div class="number">0</div>
-        </div>
-    </div>
-</div>
-
-<!-- Main Content Area -->
-<div class="dashboard-content">
-    <!-- User Management Section -->
-    <div class="content-section">
-        <div class="section-header">
-            <div class="section-title">
-                <i class="bi bi-people"></i>
-                User Management
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="card-subtitle mb-1">TOTAL STUDENTS</h6>
+                            <h2 class="card-title mb-0">{{ total_students|default(0) }}</h2>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <a href="#" class="view-all">View All</a>
         </div>
-        <div class="section-content">
-            <div class="action-cards">
-                <div class="action-card">
-                    <div class="action-icon">
-                        <i class="bi bi-person-plus"></i>
-                    </div>
-                    <div class="action-text">
-                        <h5>Add New User</h5>
-                        <p>Create a new user account</p>
-                    </div>
-                </div>
-                
-                <div class="action-card">
-                    <div class="action-icon">
-                        <i class="bi bi-file-earmark-text"></i>
-                    </div>
-                    <div class="action-text">
-                        <h5>Bulk Upload Users</h5>
-                        <p>Import multiple users via CSV</p>
+        <div class="col-md-4">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon">
+                            <i class="bi bi-file-text"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="card-subtitle mb-1">TOTAL RESULTS</h6>
+                            <h2 class="card-title mb-0">{{ total_results|default(0) }}</h2>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="action-card">
-                    <div class="action-icon">
-                        <i class="bi bi-gear"></i>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="card-subtitle mb-1">RECENT RESULTS</h6>
+                            <h2 class="card-title mb-0">{{ recent_results|default(0) }}</h2>
+                        </div>
                     </div>
-                    <div class="action-text">
-                        <h5>Manage Users</h5>
-                        <p>View, edit or delete users</p>
-                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management Section -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-people-fill me-2"></i>
+                User Management
+            </h5>
+            <a href="{{ url_for('list_users') }}" class="btn btn-sm btn-link">View All</a>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <a href="{{ url_for('add_new_user') }}" class="card action-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="action-icon">
+                                    <i class="bi bi-person-plus"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h5 class="card-title">Add New User</h5>
+                                    <p class="card-text text-muted">Create a new user account</p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{{ url_for('bulk_upload_users') }}" class="card action-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="action-icon">
+                                    <i class="bi bi-file-earmark-arrow-up"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h5 class="card-title">Bulk Upload Users</h5>
+                                    <p class="card-text text-muted">Import multiple users via CSV</p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{{ url_for('manage_users') }}" class="card action-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="action-icon">
+                                    <i class="bi bi-gear"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h5 class="card-title">Manage Users</h5>
+                                    <p class="card-text text-muted">View, edit or delete users</p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Results Section -->
-    <div class="content-section">
-        <div class="section-header">
-            <div class="section-title">
-                <i class="bi bi-file-earmark-text"></i>
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-file-text-fill me-2"></i>
                 Results
-            </div>
-            <a href="#" class="view-all">View All</a>
+            </h5>
+            <a href="{{ url_for('view_results') }}" class="btn btn-sm btn-link">View All</a>
         </div>
-        <div class="section-content">
-            <div class="action-cards">
-                <div class="action-card">
-                    <div class="action-icon">
-                        <i class="bi bi-cloud-upload"></i>
-                    </div>
-                    <div class="action-text">
-                        <h5>Upload Results</h5>
-                        <p>Add new exam results</p>
-                    </div>
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <a href="{{ url_for('upload_results') }}" class="card action-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="action-icon">
+                                    <i class="bi bi-cloud-upload"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h5 class="card-title">Upload Results</h5>
+                                    <p class="card-text text-muted">Add new exam results</p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
                 </div>
-                
-                <div class="action-card">
-                    <div class="action-icon">
-                        <i class="bi bi-search"></i>
-                    </div>
-                    <div class="action-text">
-                        <h5>View Results</h5>
-                        <p>Search and manage results</p>
-                    </div>
+                <div class="col-md-6">
+                    <a href="{{ url_for('view_results') }}" class="card action-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="action-icon">
+                                    <i class="bi bi-search"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h5 class="card-title">View Results</h5>
+                                    <p class="card-text text-muted">Search and manage results</p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Departments Section -->
-    <div class="content-section">
-        <div class="section-header">
-            <h2>Departments</h2>
-            <div class="department-search">
-                <input type="text" class="form-control" placeholder="Search departments...">
-                <button class="btn btn-primary btn-sm">Search</button>
-            </div>
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-building me-2"></i>
+                Departments
+            </h5>
         </div>
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Department Name</th>
-                        <th>HOD</th>
-                        <th>Total Students</th>
-                        <th>Total Lecturers</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Department rows will be populated dynamically -->
-                </tbody>
-            </table>
+        <div class="card-body">
+            <form action="{{ url_for('search_departments') }}" method="POST" class="mb-4">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" placeholder="Search departments...">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> SEARCH
+                    </button>
+                </div>
+            </form>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>DEPARTMENT NAME</th>
+                            <th>HOD</th>
+                            <th>TOTAL STUDENTS</th>
+                            <th>TOTAL LECTURERS</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dept in departments|default([]) %}
+                        <tr>
+                            <td>{{ dept.id }}</td>
+                            <td>{{ dept.name }}</td>
+                            <td>{{ dept.hod }}</td>
+                            <td>{{ dept.total_students }}</td>
+                            <td>{{ dept.total_lecturers }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="#" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-sm btn-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .stat-card {
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(66, 133, 244, 0.1);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .stat-icon i {
+        font-size: 24px;
+        color: #4285f4;
+    }
+    
+    .action-card {
+        transition: all 0.3s ease;
+        border: 1px solid var(--border-color);
+        text-decoration: none;
+        color: var(--text-primary);
+    }
+    
+    .action-card:hover {
+        transform: translateY(-5px);
+        border-color: #4285f4;
+        color: var(--text-primary);
+    }
+    
+    .action-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(66, 133, 244, 0.1);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .action-icon i {
+        font-size: 20px;
+        color: #4285f4;
+    }
+    
+    .table {
+        color: var(--text-primary);
+    }
+    
+    .table thead th {
+        background: var(--secondary-bg);
+        border-bottom: 2px solid var(--border-color);
+    }
+    
+    .table tbody tr:hover {
+        background: var(--hover-bg);
+    }
+</style>
 {% endblock %}

@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">
+                        <i class="bi bi-file-earmark-spreadsheet me-2"></i>
+                        Upload Results
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        <div class="mb-4">
+                            <div class="form-group">
+                                <label for="course" class="form-label">Course</label>
+                                <select class="form-select" id="course" name="course" required>
+                                    <option value="">Select Course...</option>
+                                    <option value="btech">B.Tech</option>
+                                    <option value="mtech">M.Tech</option>
+                                    <option value="bca">BCA</option>
+                                    <option value="mca">MCA</option>
+                                </select>
+                                <div class="invalid-feedback">Please select a course.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-group">
+                                <label for="semester" class="form-label">Semester</label>
+                                <select class="form-select" id="semester" name="semester" required>
+                                    <option value="">Select Semester...</option>
+                                    <option value="1">1st Semester</option>
+                                    <option value="2">2nd Semester</option>
+                                    <option value="3">3rd Semester</option>
+                                    <option value="4">4th Semester</option>
+                                    <option value="5">5th Semester</option>
+                                    <option value="6">6th Semester</option>
+                                    <option value="7">7th Semester</option>
+                                    <option value="8">8th Semester</option>
+                                </select>
+                                <div class="invalid-feedback">Please select a semester.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-group">
+                                <label for="subject" class="form-label">Subject</label>
+                                <input type="text" class="form-control" id="subject" name="subject" required>
+                                <div class="invalid-feedback">Please enter the subject.</div>
+                            </div>
+                        </div>
+
+                        <div class="upload-area mb-4">
+                            <div class="text-center p-4 upload-zone">
+                                <i class="bi bi-cloud-arrow-up display-4 mb-3"></i>
+                                <h4>Drag & Drop Excel File</h4>
+                                <p class="text-muted">or</p>
+                                <label for="file" class="btn btn-primary">
+                                    <i class="bi bi-folder me-2"></i>
+                                    Browse Files
+                                </label>
+                                <input type="file" id="file" name="file" accept=".xlsx,.xls" class="d-none" required>
+                                <div id="file-name" class="mt-2 text-muted"></div>
+                                <div class="invalid-feedback">Please select an Excel file.</div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary upload-btn">
+                                <i class="bi bi-upload me-2"></i>
+                                Upload Results
+                            </button>
+                            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>
+                                Back to Dashboard
+                            </a>
+                        </div>
+                    </form>
+
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Excel Format Instructions</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Your Excel file should have the following columns:</p>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Column</th>
+                                            <th>Description</th>
+                                            <th>Required</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Roll Number</td>
+                                            <td>Student's Roll Number</td>
+                                            <td><span class="badge bg-success">Yes</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Name</td>
+                                            <td>Student's Full Name</td>
+                                            <td><span class="badge bg-success">Yes</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Marks</td>
+                                            <td>Obtained Marks</td>
+                                            <td><span class="badge bg-success">Yes</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Total Marks</td>
+                                            <td>Maximum Marks</td>
+                                            <td><span class="badge bg-success">Yes</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <a href="#" class="btn btn-sm btn-outline-primary mt-3">
+                                <i class="bi bi-download me-2"></i>
+                                Download Sample Excel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.upload-zone {
+    border: 2px dashed var(--border-color);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.upload-zone:hover {
+    border-color: #4285f4;
+    background: rgba(66, 133, 244, 0.05);
+}
+
+.upload-zone.dragover {
+    border-color: #4285f4;
+    background: rgba(66, 133, 244, 0.1);
+    transform: scale(1.02);
+}
+
+.upload-zone i {
+    color: #4285f4;
+}
+
+.badge {
+    font-weight: 500;
+}
+
+.form-label {
+    font-weight: 500;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadZone = document.querySelector('.upload-zone');
+    const fileInput = document.getElementById('file');
+    const fileName = document.getElementById('file-name');
+    const form = document.querySelector('form');
+    
+    // Handle drag and drop
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadZone.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadZone.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadZone.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight(e) {
+        uploadZone.classList.add('dragover');
+    }
+    
+    function unhighlight(e) {
+        uploadZone.classList.remove('dragover');
+    }
+    
+    uploadZone.addEventListener('drop', handleDrop, false);
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fileInput.files = files;
+        updateFileName();
+    }
+    
+    // Handle file selection
+    uploadZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', updateFileName);
+    
+    function updateFileName() {
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                fileName.textContent = file.name;
+                fileName.classList.remove('text-danger');
+            } else {
+                fileName.textContent = 'Please select an Excel file';
+                fileName.classList.add('text-danger');
+            }
+        } else {
+            fileName.textContent = '';
+        }
+    }
+
+    // Form validation
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    });
+
+    // Dynamic semester options based on course
+    const courseSelect = document.getElementById('course');
+    const semesterSelect = document.getElementById('semester');
+    
+    courseSelect.addEventListener('change', function() {
+        const maxSemesters = {
+            'btech': 8,
+            'mtech': 4,
+            'bca': 6,
+            'mca': 4
+        };
+        
+        const numSemesters = maxSemesters[this.value] || 8;
+        
+        // Clear existing options
+        semesterSelect.innerHTML = '<option value="">Select Semester...</option>';
+        
+        // Add new options
+        for (let i = 1; i <= numSemesters; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = `${i}${getOrdinalSuffix(i)} Semester`;
+            semesterSelect.appendChild(option);
+        }
+    });
+    
+    function getOrdinalSuffix(i) {
+        const j = i % 10,
+              k = i % 100;
+        if (j == 1 && k != 11) return 'st';
+        if (j == 2 && k != 12) return 'nd';
+        if (j == 3 && k != 13) return 'rd';
+        return 'th';
+    }
+});
+</script>
+{% endblock %}
