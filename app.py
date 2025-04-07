@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, User, Student, Faculty, Course, Attendance
+from models import db, User, Student, Faculty, Course, Attendance, Result
 from datetime import datetime
 import os
 
@@ -352,15 +352,75 @@ def upload_results():
     
     return render_template('admin/upload_results.html')
 
-@app.route('/admin/results/view')
+@app.route('/admin/view_results')
 @login_required
 def view_results():
     if current_user.role != 'admin':
         flash('Access denied. Admin privileges required.')
         return redirect(url_for('index'))
     
-    results = []  # Get results from database
-    return render_template('admin/view_results.html', results=results)
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    
+    # Get filter parameters
+    course = request.args.get('course')
+    semester = request.args.get('semester')
+    subject = request.args.get('subject')
+    roll_number = request.args.get('roll_number')
+    
+    # Query results with filters
+    query = Result.query
+    
+    if course:
+        query = query.filter_by(course=course)
+    if semester:
+        query = query.filter_by(semester=semester)
+    if subject:
+        query = query.filter(Result.subject.ilike(f'%{subject}%'))
+    if roll_number:
+        query = query.filter(Result.roll_number.ilike(f'%{roll_number}%'))
+    
+    # Get paginated results
+    pagination = query.paginate(page=page, per_page=per_page)
+    results = pagination.items
+    
+    return render_template('admin/view_results.html', 
+                         results=results,
+                         page=page,
+                         total_pages=pagination.pages,
+                         has_next=pagination.has_next,
+                         has_prev=pagination.has_prev)
+
+@app.route('/admin/edit_result/<int:result_id>', methods=['POST'])
+@login_required
+def edit_result(result_id):
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': 'Access denied'})
+    
+    result = Result.query.get_or_404(result_id)
+    marks = request.form.get('marks', type=int)
+    total_marks = request.form.get('total_marks', type=int)
+    
+    if marks is not None and total_marks is not None:
+        result.marks = marks
+        result.total_marks = total_marks
+        result.percentage = (marks / total_marks) * 100
+        result.status = 'Pass' if result.percentage >= 40 else 'Fail'
+        db.session.commit()
+        return jsonify({'success': True})
+    
+    return jsonify({'success': False, 'message': 'Invalid data'})
+
+@app.route('/admin/delete_result/<int:result_id>', methods=['POST'])
+@login_required
+def delete_result(result_id):
+    if current_user.role != 'admin':
+        return jsonify({'success': False, 'message': 'Access denied'})
+    
+    result = Result.query.get_or_404(result_id)
+    db.session.delete(result)
+    db.session.commit()
+    return jsonify({'success': True})
 
 @app.route('/admin/departments/search', methods=['GET', 'POST'])
 @login_required

@@ -39,3 +39,18 @@ class Attendance(db.Model):
     status = db.Column(db.String(20), nullable=False)  # present, absent, late
     marked_by = db.Column(db.Integer, db.ForeignKey('faculty.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Result(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('student.id'), nullable=False)
+    course = db.Column(db.String(50), nullable=False)
+    semester = db.Column(db.Integer, nullable=False)
+    subject = db.Column(db.String(100), nullable=False)
+    marks = db.Column(db.Integer, nullable=False)
+    total_marks = db.Column(db.Integer, nullable=False)
+    percentage = db.Column(db.Float, nullable=False)
+    status = db.Column(db.String(20), nullable=False)  # Pass, Fail
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    student = db.relationship('Student', backref=db.backref('results', lazy=True))
