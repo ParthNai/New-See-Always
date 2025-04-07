@@ -1,15 +1,92 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <h2>Student Dashboard</h2>
-        <div class="card mt-4">
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1><i class="bi bi-mortarboard-fill"></i> Student Dashboard</h1>
+        <div class="student-info">
+            <div class="info-card">
+                <i class="bi bi-person-badge"></i>
+                <div class="info-details">
+                    <span class="info-label">Name</span>
+                    <span class="info-value">{{ student.name }}</span>
+                </div>
+            </div>
+            <div class="info-card">
+                <i class="bi bi-card-heading"></i>
+                <div class="info-details">
+                    <span class="info-label">Roll Number</span>
+                    <span class="info-value">{{ student.roll_number }}</span>
+                </div>
+            </div>
+            <div class="info-card">
+                <i class="bi bi-book"></i>
+                <div class="info-details">
+                    <span class="info-label">Course</span>
+                    <span class="info-value">{{ student.course }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Attendance Overview Card -->
+        <div class="dashboard-card overview-card">
             <div class="card-header">
-                <h4>My Attendance</h4>
+                <h3><i class="bi bi-graph-up"></i> Attendance Overview</h3>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-icon">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4>Overall Attendance</h4>
+                            <div class="stat-value">85%</div>
+                            <div class="stat-trend positive">
+                                <i class="bi bi-arrow-up"></i> 5% this month
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4>Classes Attended</h4>
+                            <div class="stat-value">42/48</div>
+                            <div class="stat-trend">Last 30 days</div>
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4>Classes Missed</h4>
+                            <div class="stat-value">6</div>
+                            <div class="stat-trend negative">Action needed</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="attendance-chart">
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Attendance Card -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h3><i class="bi bi-calendar-week"></i> Recent Attendance</h3>
+                <div class="card-actions">
+                    <button class="btn btn-sm btn-primary" onclick="downloadAttendance()">
+                        <i class="bi bi-download"></i> Download Report
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="attendance-table">
                     <table class="table">
                         <thead>
                             <tr>
@@ -20,16 +97,16 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for attendance in attendances %}
+                            {% for record in attendance_records %}
                             <tr>
-                                <td>{{ attendance.date.strftime('%Y-%m-%d') }}</td>
-                                <td>{{ attendance.course.name }}</td>
+                                <td>{{ record.date }}</td>
+                                <td>{{ record.course }}</td>
                                 <td>
-                                    <span class="badge {% if attendance.status == 'present' %}bg-success{% elif attendance.status == 'absent' %}bg-danger{% else %}bg-warning{% endif %}">
-                                        {{ attendance.status|title }}
+                                    <span class="status-badge {{ record.status.lower() }}">
+                                        {{ record.status }}
                                     </span>
                                 </td>
-                                <td>{{ attendance.faculty.name }}</td>
+                                <td>{{ record.faculty_name }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -37,6 +114,90 @@
                 </div>
             </div>
         </div>
+
+        <!-- Quick Actions Card -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h3><i class="bi bi-lightning"></i> Quick Actions</h3>
+            </div>
+            <div class="card-body">
+                <div class="quick-actions">
+                    <a href="#" class="action-button" onclick="viewAttendanceDetails()">
+                        <i class="bi bi-calendar-range"></i>
+                        <span>View Full Attendance</span>
+                    </a>
+                    <a href="#" class="action-button" onclick="requestLeave()">
+                        <i class="bi bi-calendar-x"></i>
+                        <span>Request Leave</span>
+                    </a>
+                    <a href="#" class="action-button" onclick="viewSchedule()">
+                        <i class="bi bi-calendar4-week"></i>
+                        <span>Class Schedule</span>
+                    </a>
+                    <a href="#" class="action-button" onclick="contactFaculty()">
+                        <i class="bi bi-chat-dots"></i>
+                        <span>Contact Faculty</span>
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize attendance chart
+    const ctx = document.getElementById('attendanceChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            datasets: [{
+                label: 'Attendance %',
+                data: [80, 85, 82, 88],
+                borderColor: '#4e73df',
+                backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+});
+
+function downloadAttendance() {
+    // Add download functionality
+    alert('Downloading attendance report...');
+}
+
+function viewAttendanceDetails() {
+    window.location.href = '/student/attendance';
+}
+
+function requestLeave() {
+    window.location.href = '/student/leave-request';
+}
+
+function viewSchedule() {
+    window.location.href = '/student/schedule';
+}
+
+function contactFaculty() {
+    window.location.href = '/student/contact-faculty';
+}
+</script>
 {% endblock %}

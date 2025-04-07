@@ -1,19 +1,35 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash
+from forms import RegistrationForm
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, User, Student, Faculty, Course, Attendance, Result
 from datetime import datetime
 import os
 
+# Create Flask app
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///attendance.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Import db and models
+from models import db, User, Student, Faculty, Course, Attendance
+
+# Initialize SQLAlchemy with app
 db.init_app(app)
+
+# Initialize Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+# Create database tables
+def init_db():
+    with app.app_context():
+        db.create_all()
+        print("Database tables created successfully!")
+
+# Initialize database on startup
+init_db()
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -21,10 +37,22 @@ def load_user(user_id):
 
 @app.route('/')
 def index():
+    if current_user.is_authenticated:
+        if current_user.role == 'student':
+            return redirect(url_for('student_dashboard'))
+        elif current_user.role == 'admin':
+            return redirect(url_for('admin_dashboard'))
     return render_template('index.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        if current_user.role == 'student':
+            return redirect(url_for('student_dashboard'))
+        elif current_user.role == 'admin':
+            return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('index'))
+    
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -32,418 +60,110 @@ def login():
         
         if user and check_password_hash(user.password, password):
             login_user(user)
-            if user.role == 'admin':
-                return redirect(url_for('admin_dashboard'))
-            elif user.role == 'faculty':
-                return redirect(url_for('faculty_dashboard'))
-            elif user.role == 'student':
+            flash('Logged in successfully!', 'success')
+            
+            if user.role == 'student':
                 return redirect(url_for('student_dashboard'))
-            else:
-                return redirect(url_for('parent_dashboard'))
-        
-        flash('Invalid username or password')
+            elif user.role == 'admin':
+                return redirect(url_for('admin_dashboard'))
+            return redirect(url_for('index'))
+            
+        flash('Invalid username or password', 'danger')
+    
     return render_template('login.html')
-
-@app.route('/admin')
-@login_required
-def admin_dashboard():
-    if current_user.role != 'admin':
-        return redirect(url_for('index'))
-    return render_template('admin/dashboard.html')
-
-@app.route('/admin/dashboard')
-@login_required
-def admin_dashboard_route():
-    if current_user.role != 'admin':
-        flash('Access denied. Admin privileges required.')
-        return redirect(url_for('index'))
-    
-    total_students = User.query.filter_by(role='student').count()
-    return render_template('admin/dashboard.html', total_students=total_students)
-
-@app.route('/faculty')
-@login_required
-def faculty_dashboard():
-    if current_user.role != 'faculty':
-        return redirect(url_for('index'))
-    return render_template('faculty/dashboard.html')
-
-@app.route('/faculty/dashboard')
-@login_required
-def faculty_dashboard_route():
-    if current_user.role != 'faculty':
-        flash('Access denied. Faculty privileges required.')
-        return redirect(url_for('index'))
-    return render_template('faculty/dashboard.html')
-
-@app.route('/student')
-@login_required
-def student_dashboard():
-    if current_user.role != 'student':
-        return redirect(url_for('index'))
-    return render_template('student/dashboard.html')
-
-@app.route('/student/dashboard')
-@login_required
-def student_dashboard_route():
-    if current_user.role != 'student':
-        flash('Access denied. Student privileges required.')
-        return redirect(url_for('index'))
-    return render_template('student/dashboard.html')
-
-@app.route('/parent')
-@login_required
-def parent_dashboard():
-    if current_user.role != 'parent':
-        return redirect(url_for('index'))
-    return render_template('parent/dashboard.html')
-
-@app.route('/mark-attendance', methods=['GET', 'POST'])
-@login_required
-def mark_attendance():
-    if current_user.role != 'faculty':
-        return redirect(url_for('index'))
-    
-    if request.method == 'POST':
-        course_id = request.form.get('course_id')
-        student_id = request.form.get('student_id')
-        status = request.form.get('status')
-        
-        attendance = Attendance(
-            student_id=student_id,
-            course_id=course_id,
-            status=status,
-            marked_by=current_user.id,
-            date=datetime.now().date()
-        )
-        db.session.add(attendance)
-        db.session.commit()
-        flash('Attendance marked successfully')
-        
-    return render_template('faculty/mark_attendance.html')
-
-@app.route('/admin/add_user', methods=['POST'])
-@login_required
-def add_user():
-    if current_user.role != 'admin':
-        return jsonify({'error': 'Unauthorized'}), 403
-    
-    username = request.form.get('username')
-    email = request.form.get('email')
-    password = request.form.get('password')
-    role = request.form.get('role')
-    
-    if User.query.filter_by(username=username).first():
-        flash('Username already exists')
-        return redirect(url_for('admin_dashboard'))
-    
-    if User.query.filter_by(email=email).first():
-        flash('Email already exists')
-        return redirect(url_for('admin_dashboard'))
-    
-    user = User(
-        username=username,
-        email=email,
-        password=generate_password_hash(password),
-        role=role
-    )
-    db.session.add(user)
-    
-    # Create role-specific records
-    if role == 'student':
-        student = Student(
-            user_id=user.id,
-            roll_number=request.form.get('roll_number'),
-            name=request.form.get('name'),
-            course=request.form.get('course')
-        )
-        db.session.add(student)
-    elif role == 'faculty':
-        faculty = Faculty(
-            user_id=user.id,
-            name=request.form.get('name'),
-            department=request.form.get('department')
-        )
-        db.session.add(faculty)
-    
-    try:
-        db.session.commit()
-        flash('User created successfully')
-    except Exception as e:
-        db.session.rollback()
-        flash('Error creating user')
-    
-    return redirect(url_for('admin_dashboard'))
-
-@app.route('/admin/delete_user/<int:user_id>', methods=['POST'])
-@login_required
-def delete_user(user_id):
-    if current_user.role != 'admin':
-        return jsonify({'error': 'Unauthorized'}), 403
-    
-    user = User.query.get_or_404(user_id)
-    if user.role == 'admin':
-        flash('Cannot delete admin user')
-        return redirect(url_for('admin_dashboard'))
-    
-    try:
-        db.session.delete(user)
-        db.session.commit()
-        flash('User deleted successfully')
-    except:
-        db.session.rollback()
-        flash('Error deleting user')
-    
-    return redirect(url_for('admin_dashboard'))
-
-@app.route('/admin/edit_user/<int:user_id>', methods=['POST'])
-@login_required
-def edit_user(user_id):
-    if current_user.role != 'admin':
-        return jsonify({'error': 'Unauthorized'}), 403
-    
-    user = User.query.get_or_404(user_id)
-    email = request.form.get('email')
-    
-    if User.query.filter(User.email == email, User.id != user_id).first():
-        flash('Email already exists')
-        return redirect(url_for('admin_dashboard'))
-    
-    user.email = email
-    if request.form.get('password'):
-        user.password = generate_password_hash(request.form.get('password'))
-    
-    try:
-        db.session.commit()
-        flash('User updated successfully')
-    except:
-        db.session.rollback()
-        flash('Error updating user')
-    
-    return redirect(url_for('admin_dashboard'))
-
-@app.route('/admin/users')
-@login_required
-def list_users():
-    if current_user.role != 'admin':
-        return jsonify({'error': 'Unauthorized'}), 403
-    
-    users = User.query.all()
-    return render_template('admin/users.html', users=users)
-
-@app.route('/admin/users/add', methods=['GET', 'POST'])
-@login_required
-def add_new_user():
-    if current_user.role != 'admin':
-        flash('Access denied. Admin privileges required.')
-        return redirect(url_for('index'))
-    
-    if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        role = request.form.get('role')
-        name = request.form.get('name')
-        
-        if User.query.filter_by(username=username).first():
-            flash('Username already exists')
-            return redirect(url_for('add_new_user'))
-        
-        user = User(
-            username=username,
-            email=email,
-            password=generate_password_hash(password),
-            role=role
-        )
-        
-        try:
-            db.session.add(user)
-            db.session.commit()
-            flash('User added successfully!')
-        except:
-            db.session.rollback()
-            flash('Error adding user')
-        
-        return redirect(url_for('admin_dashboard'))
-    
-    return render_template('admin/add_user.html')
-
-@app.route('/admin/users/bulk-upload', methods=['GET', 'POST'])
-@login_required
-def bulk_upload_users():
-    if current_user.role != 'admin':
-        flash('Access denied. Admin privileges required.')
-        return redirect(url_for('index'))
-    
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            flash('No file uploaded')
-            return redirect(url_for('bulk_upload_users'))
-        
-        file = request.files['file']
-        if file.filename == '':
-            flash('No file selected')
-            return redirect(url_for('bulk_upload_users'))
-        
-        if not file.filename.endswith('.csv'):
-            flash('Please upload a CSV file')
-            return redirect(url_for('bulk_upload_users'))
-        
-        try:
-            # Process CSV file
-            import csv
-            import io
-            stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
-            csv_data = csv.DictReader(stream)
-            
-            for row in csv_data:
-                user = User(
-                    username=row['username'],
-                    email=row['email'],
-                    password=generate_password_hash(row['password']),
-                    role=row['role']
-                )
-                db.session.add(user)
-            
-            db.session.commit()
-            flash('Users imported successfully!')
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error importing users: {str(e)}')
-        
-        return redirect(url_for('admin_dashboard'))
-    
-    return render_template('admin/bulk_upload.html')
-
-@app.route('/admin/users/manage')
-@login_required
-def manage_users():
-    if current_user.role != 'admin':
-        flash('Access denied. Admin privileges required.')
-        return redirect(url_for('index'))
-    
-    users = User.query.filter(User.role != 'admin').all()
-    return render_template('admin/manage_users.html', users=users)
-
-@app.route('/admin/results/upload', methods=['GET', 'POST'])
-@login_required
-def upload_results():
-    if current_user.role != 'admin':
-        flash('Access denied. Admin privileges required.')
-        return redirect(url_for('index'))
-    
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            flash('No file uploaded')
-            return redirect(url_for('upload_results'))
-        
-        file = request.files['file']
-        if file.filename == '':
-            flash('No file selected')
-            return redirect(url_for('upload_results'))
-        
-        try:
-            # Process results file
-            flash('Results uploaded successfully!')
-        except Exception as e:
-            flash(f'Error uploading results: {str(e)}')
-        
-        return redirect(url_for('admin_dashboard'))
-    
-    return render_template('admin/upload_results.html')
-
-@app.route('/admin/view_results')
-@login_required
-def view_results():
-    if current_user.role != 'admin':
-        flash('Access denied. Admin privileges required.')
-        return redirect(url_for('index'))
-    
-    page = request.args.get('page', 1, type=int)
-    per_page = 10
-    
-    # Get filter parameters
-    course = request.args.get('course')
-    semester = request.args.get('semester')
-    subject = request.args.get('subject')
-    roll_number = request.args.get('roll_number')
-    
-    # Query results with filters
-    query = Result.query
-    
-    if course:
-        query = query.filter_by(course=course)
-    if semester:
-        query = query.filter_by(semester=semester)
-    if subject:
-        query = query.filter(Result.subject.ilike(f'%{subject}%'))
-    if roll_number:
-        query = query.filter(Result.roll_number.ilike(f'%{roll_number}%'))
-    
-    # Get paginated results
-    pagination = query.paginate(page=page, per_page=per_page)
-    results = pagination.items
-    
-    return render_template('admin/view_results.html', 
-                         results=results,
-                         page=page,
-                         total_pages=pagination.pages,
-                         has_next=pagination.has_next,
-                         has_prev=pagination.has_prev)
-
-@app.route('/admin/edit_result/<int:result_id>', methods=['POST'])
-@login_required
-def edit_result(result_id):
-    if current_user.role != 'admin':
-        return jsonify({'success': False, 'message': 'Access denied'})
-    
-    result = Result.query.get_or_404(result_id)
-    marks = request.form.get('marks', type=int)
-    total_marks = request.form.get('total_marks', type=int)
-    
-    if marks is not None and total_marks is not None:
-        result.marks = marks
-        result.total_marks = total_marks
-        result.percentage = (marks / total_marks) * 100
-        result.status = 'Pass' if result.percentage >= 40 else 'Fail'
-        db.session.commit()
-        return jsonify({'success': True})
-    
-    return jsonify({'success': False, 'message': 'Invalid data'})
-
-@app.route('/admin/delete_result/<int:result_id>', methods=['POST'])
-@login_required
-def delete_result(result_id):
-    if current_user.role != 'admin':
-        return jsonify({'success': False, 'message': 'Access denied'})
-    
-    result = Result.query.get_or_404(result_id)
-    db.session.delete(result)
-    db.session.commit()
-    return jsonify({'success': True})
-
-@app.route('/admin/departments/search', methods=['GET', 'POST'])
-@login_required
-def search_departments():
-    if current_user.role != 'admin':
-        flash('Access denied. Admin privileges required.')
-        return redirect(url_for('index'))
-    
-    if request.method == 'POST':
-        search_term = request.form.get('search')
-        departments = []  # Search departments in database
-        return render_template('admin/departments.html', departments=departments)
-    
-    departments = []  # Get all departments
-    return render_template('admin/departments.html', departments=departments)
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
+    flash('Logged out successfully.', 'success')
     return redirect(url_for('index'))
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        # Check if username already exists
+        if User.query.filter_by(username=form.username.data).first():
+            flash('Username already exists. Please choose a different one.', 'danger')
+            return render_template('register.html', form=form)
+        
+        # Create new user
+        hashed_password = generate_password_hash(form.password.data)
+        user = User(username=form.username.data,
+                   email=form.email.data,
+                   password=hashed_password,
+                   role=form.role.data)
+        
+        try:
+            db.session.add(user)
+            db.session.commit()
+            
+            # Create student profile if role is student
+            if form.role.data == 'student':
+                student = Student(user_id=user.id,
+                                name=form.username.data,
+                                email=form.email.data)
+                db.session.add(student)
+                db.session.commit()
+            
+            flash('Registration successful! Please login.', 'success')
+            return redirect(url_for('login'))
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred during registration. Please try again.', 'danger')
+            print(f'Registration error: {str(e)}')
+    
+    return render_template('register.html', form=form)
+
+@app.route('/student/dashboard')
+@login_required
+def student_dashboard():
+    if current_user.role != 'student':
+        flash('Access denied. Student access only.', 'danger')
+        return redirect(url_for('index'))
+    
+    # Get student details
+    student = Student.query.filter_by(user_id=current_user.id).first()
+    if not student:
+        flash('Student profile not found.', 'danger')
+        return redirect(url_for('index'))
+    
+    # Get recent attendance records
+    attendance_records = []
+    try:
+        attendance_records = (
+            db.session.query(
+                Attendance,
+                Course.name.label('course'),
+                Faculty.name.label('faculty_name')
+            )
+            .join(Course, Attendance.course_id == Course.id)
+            .join(Faculty, Attendance.marked_by == Faculty.id)
+            .filter(Attendance.student_id == student.id)
+            .order_by(Attendance.date.desc())
+            .limit(10)
+            .all()
+        )
+    except Exception as e:
+        print(f"Error fetching attendance: {e}")
+    
+    # Format attendance records
+    records = []
+    for record in attendance_records:
+        records.append({
+            'date': record.Attendance.date.strftime('%Y-%m-%d'),
+            'course': record.course,
+            'status': record.Attendance.status,
+            'faculty_name': record.faculty_name
+        })
+    
+    return render_template('student/dashboard.html', 
+                         student=student, 
+                         attendance_records=records)
+
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)

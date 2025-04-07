@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="activity-portal">
+    <div class="portal-header">
+        <h1>
+            <i class="bi bi-activity"></i>
+            Your Activity Portal
+        </h1>
+        <p class="text-secondary">Track your engagement and progress in real-time</p>
+    </div>
+
+    <div class="portal-grid">
+        <!-- Overview Card -->
+        <div class="portal-card overview-card">
+            <div class="card-header">
+                <h3><i class="bi bi-speedometer2"></i> Overview</h3>
+            </div>
+            <div class="card-body">
+                <div class="activity-chart-large">
+                    <canvas id="activityChartLarge"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Card -->
+        <div class="portal-card stats-card">
+            <div class="card-header">
+                <h3><i class="bi bi-graph-up"></i> Statistics</h3>
+            </div>
+            <div class="card-body">
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-icon">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4>Weekly Activity</h4>
+                            <div class="stat-value">85%</div>
+                            <div class="stat-trend positive">
+                                <i class="bi bi-arrow-up"></i> 5%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4>Total Hours</h4>
+                            <div class="stat-value">42h</div>
+                            <div class="stat-trend positive">
+                                <i class="bi bi-arrow-up"></i> 2h
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">
+                            <i class="bi bi-check2-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4>Sessions</h4>
+                            <div class="stat-value">25</div>
+                            <div class="stat-trend neutral">
+                                <i class="bi bi-dash"></i> 0
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">
+                            <i class="bi bi-file-earmark-text"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h4>Reports</h4>
+                            <div class="stat-value">5</div>
+                            <div class="stat-trend positive">
+                                <i class="bi bi-arrow-up"></i> 2
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity Card -->
+        <div class="portal-card activity-list-card">
+            <div class="card-header">
+                <h3><i class="bi bi-clock"></i> Recent Activity</h3>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-icon success">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h4>Attendance Marked</h4>
+                            <p>Mathematics Class</p>
+                            <span class="timeline-time">Today at 9:30 AM</span>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-icon info">
+                            <i class="bi bi-file-text-fill"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h4>Report Generated</h4>
+                            <p>Monthly Attendance Report</p>
+                            <span class="timeline-time">Yesterday at 3:45 PM</span>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-icon primary">
+                            <i class="bi bi-person-check-fill"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h4>Login Activity</h4>
+                            <p>System Access</p>
+                            <span class="timeline-time">Yesterday at 8:15 AM</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('activityChartLarge').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'Activity Level',
+                data: [85, 90, 88, 95, 86, 80, 92],
+                fill: true,
+                borderColor: '#4e73df',
+                backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        },
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.7)'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

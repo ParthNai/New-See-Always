@@ -15,35 +15,53 @@
 {% if not current_user.is_authenticated %}
 <!-- Stats Cards -->
 <div class="stats-container">
-    <div class="stats-card" style="border-left: 4px solid #4e73df;">
+    <a href="{{ url_for('login') }}" class="stats-card faculty-card" style="border-left: 4px solid #4e73df;">
         <div class="stats-icon">
             <i class="bi bi-person-workspace"></i>
         </div>
         <div class="stats-info">
             <h3>FOR FACULTY</h3>
-            <div class="text-secondary">Take attendance & manage courses</div>
+            <div class="text-secondary">
+                <ul class="feature-list">
+                    <li>Take and manage attendance</li>
+                    <li>Create and update courses</li>
+                    <li>Generate attendance reports</li>
+                </ul>
+            </div>
         </div>
-    </div>
+    </a>
     
-    <div class="stats-card" style="border-left: 4px solid #1cc88a;">
+    <a href="{{ url_for('login') }}" class="stats-card student-card" style="border-left: 4px solid #1cc88a;">
         <div class="stats-icon">
             <i class="bi bi-mortarboard"></i>
         </div>
         <div class="stats-info">
             <h3>FOR STUDENTS</h3>
-            <div class="text-secondary">Check attendance records</div>
+            <div class="text-secondary">
+                <ul class="feature-list">
+                    <li>View attendance records</li>
+                    <li>Track attendance percentage</li>
+                    <li>Download attendance reports</li>
+                </ul>
+            </div>
         </div>
-    </div>
+    </a>
     
-    <div class="stats-card" style="border-left: 4px solid #36b9cc;">
+    <a href="{{ url_for('login') }}" class="stats-card parent-card" style="border-left: 4px solid #36b9cc;">
         <div class="stats-icon">
             <i class="bi bi-people"></i>
         </div>
         <div class="stats-info">
             <h3>FOR PARENTS</h3>
-            <div class="text-secondary">Monitor attendance updates</div>
+            <div class="text-secondary">
+                <ul class="feature-list">
+                    <li>Monitor student attendance</li>
+                    <li>Receive absence notifications</li>
+                    <li>View attendance history</li>
+                </ul>
+            </div>
         </div>
-    </div>
+    </a>
 </div>
 
 <!-- Login Section -->
@@ -55,16 +73,29 @@
         </div>
     </div>
     <div class="section-content">
-        <div class="action-cards">
-            <div class="action-card" onclick="window.location.href='{{ url_for('login') }}'">
-                <div class="action-icon">
-                    <i class="bi bi-key"></i>
+        <div class="action-cards-container">
+            <a href="{{ url_for('login') }}" class="action-cards">
+                <div class="action-card">
+                    <div class="action-icon">
+                        <i class="bi bi-key"></i>
+                    </div>
+                    <div class="action-text">
+                        <h5>Login Now</h5>
+                        <p>Access your personalized dashboard</p>
+                    </div>
                 </div>
-                <div class="action-text">
-                    <h5>Login Now</h5>
-                    <p>Access your personalized dashboard</p>
+            </a>
+            <a href="{{ url_for('register') }}" class="action-cards">
+                <div class="action-card">
+                    <div class="action-icon">
+                        <i class="bi bi-person-plus"></i>
+                    </div>
+                    <div class="action-text">
+                        <h5>Register</h5>
+                        <p>Create your new account</p>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 </div>
@@ -78,38 +109,143 @@
         </div>
     </div>
     <div class="section-content">
-        <div class="action-cards">
-            <div class="action-card">
-                <div class="action-icon">
+        <div class="feature-cards">
+            <div class="feature-card" data-feature="attendance">
+                <div class="feature-icon">
                     <i class="bi bi-calendar-check"></i>
                 </div>
-                <div class="action-text">
+                <div class="feature-text">
                     <h5>Real-time Attendance</h5>
                     <p>Track attendance instantly and efficiently</p>
+                    <div class="feature-details" id="attendance-details">
+                        <ul>
+                            <li class="feature-item" onclick="showItemDetails(this)">
+                                <i class="bi bi-check-circle-fill"></i>
+                                <div class="feature-item-content">
+                                    <span class="feature-item-title">Quick attendance marking</span>
+                                    <div class="feature-item-details">
+                                        Mark attendance with a single click. Teachers can mark multiple students' attendance simultaneously. Includes batch processing and quick-select options for entire classes.
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="feature-item" onclick="showItemDetails(this)">
+                                <i class="bi bi-check-circle-fill"></i>
+                                <div class="feature-item-content">
+                                    <span class="feature-item-title">Real-time synchronization</span>
+                                    <div class="feature-item-details">
+                                        All attendance data syncs instantly across devices. View live updates, track changes, and ensure data consistency across the entire system in real-time.
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="feature-item" onclick="showItemDetails(this)">
+                                <i class="bi bi-check-circle-fill"></i>
+                                <div class="feature-item-content">
+                                    <span class="feature-item-title">Mobile-friendly interface</span>
+                                    <div class="feature-item-details">
+                                        Access all features on any device. Responsive design adapts to phones, tablets, and desktops. Take attendance on-the-go with our mobile-optimized interface.
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="feature-item" onclick="showItemDetails(this)">
+                                <i class="bi bi-check-circle-fill"></i>
+                                <div class="feature-item-content">
+                                    <span class="feature-item-title">Offline mode support</span>
+                                    <div class="feature-item-details">
+                                        Continue working without internet. Data automatically syncs when connection is restored. Never lose attendance records due to connectivity issues.
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
-            
-            <div class="action-card">
-                <div class="action-icon">
+
+            <div class="feature-card" data-feature="analytics">
+                <div class="feature-icon">
                     <i class="bi bi-graph-up"></i>
                 </div>
-                <div class="action-text">
+                <div class="feature-text">
                     <h5>Analytics & Reports</h5>
                     <p>Detailed insights and attendance patterns</p>
+                    <div class="feature-details" id="analytics-details">
+                        <ul>
+                            <li><i class="bi bi-check-circle-fill"></i> Visual attendance trends</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Customizable reports</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Data export options</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Performance insights</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
-            
-            <div class="action-card">
-                <div class="action-icon">
+
+            <div class="feature-card" data-feature="notifications">
+                <div class="feature-icon">
                     <i class="bi bi-bell"></i>
                 </div>
-                <div class="action-text">
+                <div class="feature-text">
                     <h5>Instant Notifications</h5>
                     <p>Stay updated with attendance alerts</p>
+                    <div class="feature-details" id="notifications-details">
+                        <ul>
+                            <li><i class="bi bi-check-circle-fill"></i> Email notifications</li>
+                            <li><i class="bi bi-check-circle-fill"></i> SMS alerts</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Absence warnings</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Custom alert settings</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+function showFeatureDetails(feature) {
+    // Get all feature details
+    const allDetails = document.querySelectorAll('.feature-details');
+    const clickedDetails = document.getElementById(feature + '-details');
+    
+    // Close other open details
+    allDetails.forEach(detail => {
+        if (detail !== clickedDetails && detail.classList.contains('active')) {
+            detail.classList.remove('active');
+        }
+    });
+    
+    // Toggle clicked details
+    clickedDetails.classList.toggle('active');
+}
+
+function showItemDetails(item) {
+    const itemDetails = item.querySelector('.feature-item-details');
+    itemDetails.classList.toggle('active');
+}
+
+// Add click event listeners to feature cards
+document.addEventListener('DOMContentLoaded', () => {
+    const featureCards = document.querySelectorAll('.feature-card');
+    featureCards.forEach(card => {
+        card.addEventListener('click', (e) => {
+            // Prevent click from bubbling up
+            e.stopPropagation();
+            
+            // Get feature ID from data attribute
+            const feature = card.getAttribute('data-feature');
+            if (feature) {
+                showFeatureDetails(feature);
+            }
+        });
+    });
+
+    // Close details when clicking outside
+    document.addEventListener('click', () => {
+        const allDetails = document.querySelectorAll('.feature-details');
+        allDetails.forEach(detail => {
+            detail.classList.remove('active');
+        });
+    });
+});
+</script>
 {% endif %}
 {% endblock %}

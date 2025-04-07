@@ -113,7 +113,7 @@
                                 </div>
                                 <div class="ms-3">
                                     <h5 class="card-title">Manage Users</h5>
-                                    <p class="card-text text-muted">View, edit or delete users</p>
+                                    <p class="card-text text-muted">View and manage existing users</p>
                                 </div>
                             </div>
                         </div>
@@ -123,12 +123,12 @@
         </div>
     </div>
 
-    <!-- Results Section -->
-    <div class="card mb-4">
+    <!-- Results Management Section -->
+    <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
                 <i class="bi bi-file-text-fill me-2"></i>
-                Results
+                Results Management
             </h5>
             <a href="{{ url_for('view_results') }}" class="btn btn-sm btn-link">View All</a>
         </div>
@@ -143,7 +143,7 @@
                                 </div>
                                 <div class="ms-3">
                                     <h5 class="card-title">Upload Results</h5>
-                                    <p class="card-text text-muted">Add new exam results</p>
+                                    <p class="card-text text-muted">Upload new exam results</p>
                                 </div>
                             </div>
                         </div>
@@ -167,128 +167,73 @@
             </div>
         </div>
     </div>
-
-    <!-- Departments Section -->
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0">
-                <i class="bi bi-building me-2"></i>
-                Departments
-            </h5>
-        </div>
-        <div class="card-body">
-            <form action="{{ url_for('search_departments') }}" method="POST" class="mb-4">
-                <div class="input-group">
-                    <input type="text" name="search" class="form-control" placeholder="Search departments...">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-search"></i> SEARCH
-                    </button>
-                </div>
-            </form>
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>DEPARTMENT NAME</th>
-                            <th>HOD</th>
-                            <th>TOTAL STUDENTS</th>
-                            <th>TOTAL LECTURERS</th>
-                            <th>ACTIONS</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for dept in departments|default([]) %}
-                        <tr>
-                            <td>{{ dept.id }}</td>
-                            <td>{{ dept.name }}</td>
-                            <td>{{ dept.hod }}</td>
-                            <td>{{ dept.total_students }}</td>
-                            <td>{{ dept.total_lecturers }}</td>
-                            <td>
-                                <div class="btn-group">
-                                    <a href="#" class="btn btn-sm btn-primary">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <a href="#" class="btn btn-sm btn-danger">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
 </div>
 {% endblock %}
 
 {% block styles %}
 <style>
-    .stat-card {
-        transition: transform 0.3s ease;
-    }
-    
-    .stat-card:hover {
-        transform: translateY(-5px);
-    }
-    
-    .stat-icon {
-        width: 48px;
-        height: 48px;
-        background: rgba(66, 133, 244, 0.1);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .stat-icon i {
-        font-size: 24px;
-        color: #4285f4;
-    }
-    
-    .action-card {
-        transition: all 0.3s ease;
-        border: 1px solid var(--border-color);
-        text-decoration: none;
-        color: var(--text-primary);
-    }
-    
-    .action-card:hover {
-        transform: translateY(-5px);
-        border-color: #4285f4;
-        color: var(--text-primary);
-    }
-    
-    .action-icon {
-        width: 40px;
-        height: 40px;
-        background: rgba(66, 133, 244, 0.1);
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .action-icon i {
-        font-size: 20px;
-        color: #4285f4;
-    }
-    
-    .table {
-        color: var(--text-primary);
-    }
-    
-    .table thead th {
-        background: var(--secondary-bg);
-        border-bottom: 2px solid var(--border-color);
-    }
-    
-    .table tbody tr:hover {
-        background: var(--hover-bg);
-    }
+.stat-card {
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--accent-blue);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.action-card {
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+    border: 1px solid var(--border-color);
+}
+
+.action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    color: inherit;
+}
+
+.action-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--accent-blue);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+}
+
+.card-header {
+    background: var(--secondary-bg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.btn-link {
+    color: var(--accent-blue);
+    text-decoration: none;
+}
+
+.btn-link:hover {
+    text-decoration: underline;
+}
 </style>
 {% endblock %}
