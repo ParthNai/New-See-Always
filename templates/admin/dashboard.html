@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-header">
+    <h1>Admin Dashboard</h1>
+    <div class="admin-actions">
+        <button class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add User
+        </button>
+        <button class="btn btn-success">
+            <i class="bi bi-upload"></i> Upload Result
+        </button>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-container">
+    <div class="stats-card" style="border-left: 4px solid #4e73df;">
+        <div class="stats-icon">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        <div class="stats-info">
+            <h3>TOTAL STUDENTS</h3>
+            <div class="number">0</div>
+        </div>
+    </div>
+    
+    <div class="stats-card" style="border-left: 4px solid #1cc88a;">
+        <div class="stats-icon">
+            <i class="bi bi-journal-check"></i>
+        </div>
+        <div class="stats-info">
+            <h3>TOTAL RESULTS</h3>
+            <div class="number">0</div>
+        </div>
+    </div>
+    
+    <div class="stats-card" style="border-left: 4px solid #36b9cc;">
+        <div class="stats-icon">
+            <i class="bi bi-clock-history"></i>
+        </div>
+        <div class="stats-info">
+            <h3>RECENT RESULTS</h3>
+            <div class="number">0</div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Area -->
+<div class="dashboard-content">
+    <!-- User Management Section -->
+    <div class="content-section">
+        <div class="section-header">
+            <div class="section-title">
+                <i class="bi bi-people"></i>
+                User Management
+            </div>
+            <a href="#" class="view-all">View All</a>
+        </div>
+        <div class="section-content">
+            <div class="action-cards">
+                <div class="action-card">
+                    <div class="action-icon">
+                        <i class="bi bi-person-plus"></i>
+                    </div>
+                    <div class="action-text">
+                        <h5>Add New User</h5>
+                        <p>Create a new user account</p>
+                    </div>
+                </div>
+                
+                <div class="action-card">
+                    <div class="action-icon">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                    <div class="action-text">
+                        <h5>Bulk Upload Users</h5>
+                        <p>Import multiple users via CSV</p>
+                    </div>
+                </div>
+                
+                <div class="action-card">
+                    <div class="action-icon">
+                        <i class="bi bi-gear"></i>
+                    </div>
+                    <div class="action-text">
+                        <h5>Manage Users</h5>
+                        <p>View, edit or delete users</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="content-section">
+        <div class="section-header">
+            <div class="section-title">
+                <i class="bi bi-file-earmark-text"></i>
+                Results
+            </div>
+            <a href="#" class="view-all">View All</a>
+        </div>
+        <div class="section-content">
+            <div class="action-cards">
+                <div class="action-card">
+                    <div class="action-icon">
+                        <i class="bi bi-cloud-upload"></i>
+                    </div>
+                    <div class="action-text">
+                        <h5>Upload Results</h5>
+                        <p>Add new exam results</p>
+                    </div>
+                </div>
+                
+                <div class="action-card">
+                    <div class="action-icon">
+                        <i class="bi bi-search"></i>
+                    </div>
+                    <div class="action-text">
+                        <h5>View Results</h5>
+                        <p>Search and manage results</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Departments Section -->
+    <div class="content-section">
+        <div class="section-header">
+            <h2>Departments</h2>
+            <div class="department-search">
+                <input type="text" class="form-control" placeholder="Search departments...">
+                <button class="btn btn-primary btn-sm">Search</button>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Department Name</th>
+                        <th>HOD</th>
+                        <th>Total Students</th>
+                        <th>Total Lecturers</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Department rows will be populated dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
