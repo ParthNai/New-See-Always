@@ -1,57 +1,115 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8 text-center">
-            <h1 class="display-4 mb-4">Student Attendance Management System</h1>
-            <p class="lead mb-4">Welcome to our comprehensive attendance tracking solution for educational institutions.</p>
-            
-            {% if current_user.is_authenticated %}
-                <div class="alert alert-success">
-                    You are logged in as {{ current_user.username }}
-                    <br>
-                    <a href="{{ url_for(current_user.role + '_dashboard') }}" class="btn btn-primary mt-2">Go to Dashboard</a>
-                </div>
-            {% else %}
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Please Login to Continue</h5>
-                        <p class="card-text">Access your dashboard by logging into your account.</p>
-                        <a href="{{ url_for('login') }}" class="btn btn-primary">Login</a>
-                    </div>
-                </div>
-            {% endif %}
+<div class="admin-header">
+    <h1>Student Attendance Management System</h1>
+    {% if current_user.is_authenticated %}
+        <div class="admin-actions">
+            <a href="{{ url_for(current_user.role + '_dashboard') }}" class="btn btn-primary">
+                <i class="bi bi-speedometer2"></i> Go to Dashboard
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+{% if not current_user.is_authenticated %}
+<!-- Stats Cards -->
+<div class="stats-container">
+    <div class="stats-card" style="border-left: 4px solid #4e73df;">
+        <div class="stats-icon">
+            <i class="bi bi-person-workspace"></i>
+        </div>
+        <div class="stats-info">
+            <h3>FOR FACULTY</h3>
+            <div class="text-secondary">Take attendance & manage courses</div>
         </div>
     </div>
     
-    {% if not current_user.is_authenticated %}
-    <div class="row mt-5">
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">For Faculty</h5>
-                    <p class="card-text">Take attendance, view class records, and manage your courses efficiently.</p>
-                </div>
-            </div>
+    <div class="stats-card" style="border-left: 4px solid #1cc88a;">
+        <div class="stats-icon">
+            <i class="bi bi-mortarboard"></i>
         </div>
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">For Students</h5>
-                    <p class="card-text">Check your attendance records and view course-wise attendance statistics.</p>
-                </div>
-            </div>
+        <div class="stats-info">
+            <h3>FOR STUDENTS</h3>
+            <div class="text-secondary">Check attendance records</div>
         </div>
-        <div class="col-md-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">For Parents</h5>
-                    <p class="card-text">Monitor your child's attendance and receive regular updates.</p>
+    </div>
+    
+    <div class="stats-card" style="border-left: 4px solid #36b9cc;">
+        <div class="stats-icon">
+            <i class="bi bi-people"></i>
+        </div>
+        <div class="stats-info">
+            <h3>FOR PARENTS</h3>
+            <div class="text-secondary">Monitor attendance updates</div>
+        </div>
+    </div>
+</div>
+
+<!-- Login Section -->
+<div class="content-section">
+    <div class="section-header">
+        <div class="section-title">
+            <i class="bi bi-box-arrow-in-right"></i>
+            Access Your Account
+        </div>
+    </div>
+    <div class="section-content">
+        <div class="action-cards">
+            <div class="action-card" onclick="window.location.href='{{ url_for('login') }}';">
+                <div class="action-icon">
+                    <i class="bi bi-key"></i>
+                </div>
+                <div class="action-text">
+                    <h5>Login Now</h5>
+                    <p>Access your personalized dashboard</p>
                 </div>
             </div>
         </div>
     </div>
-    {% endif %}
 </div>
+
+<!-- Features Section -->
+<div class="content-section mt-4">
+    <div class="section-header">
+        <div class="section-title">
+            <i class="bi bi-stars"></i>
+            Key Features
+        </div>
+    </div>
+    <div class="section-content">
+        <div class="action-cards">
+            <div class="action-card">
+                <div class="action-icon">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+                <div class="action-text">
+                    <h5>Real-time Attendance</h5>
+                    <p>Track attendance instantly and efficiently</p>
+                </div>
+            </div>
+            
+            <div class="action-card">
+                <div class="action-icon">
+                    <i class="bi bi-graph-up"></i>
+                </div>
+                <div class="action-text">
+                    <h5>Analytics & Reports</h5>
+                    <p>Detailed insights and attendance patterns</p>
+                </div>
+            </div>
+            
+            <div class="action-card">
+                <div class="action-icon">
+                    <i class="bi bi-bell"></i>
+                </div>
+                <div class="action-text">
+                    <h5>Instant Notifications</h5>
+                    <p>Stay updated with attendance alerts</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
