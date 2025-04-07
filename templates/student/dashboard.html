@@ -1,42 +1,444 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <h2>Student Dashboard</h2>
-        <div class="card mt-4">
-            <div class="card-header">
-                <h4>My Attendance</h4>
+<div class="header">
+    <div class="logo">📚 Attendance System</div>
+    <div class="user-info">
+        <span>{{ student.roll_number }}</span>
+        <a href="{{ url_for('logout') }}" class="logout">Logout</a>
+    </div>
+    <button class="theme-toggle">🌙</button>
+</div>
+
+<div class="container">
+    <div class="welcome-header">
+        <h1>Welcome, {{ student.name }}</h1>
+        <div class="student-info">
+            <p><strong>Roll Number:</strong> {{ student.roll_number }}</p>
+            <p><strong>Course:</strong> {{ student.course }}</p>
+        </div>
+    </div>
+    
+    <div class="tabs">
+        <button class="tab active" data-tab="overview">Overview</button>
+        <button class="tab" data-tab="attendance-history">Attendance History</button>
+        <button class="tab" data-tab="profile">Profile</button>
+        <button class="tab" data-tab="timetable">Timetable</button>
+        <button class="tab" data-tab="notifications">Notifications</button>
+    </div>
+
+    <div class="tab-content active" id="overview">
+        <div class="dashboard-grid">
+            <!-- Quick Stats -->
+            <div class="card">
+                <h3>Quick Stats</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span>Overall Attendance</span>
+                        <h2>{{ "%.1f"|format(attendance_stats.values()|map(attribute='percentage')|list|sum / attendance_stats|length) }}%</h2>
+                    </div>
+                    <div class="stat-item">
+                        <span>Total Classes</span>
+                        <h2>{{ attendance_stats.values()|map(attribute='total')|list|sum }}</h2>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Course</th>
-                                <th>Status</th>
-                                <th>Marked By</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for attendance in attendances %}
-                            <tr>
-                                <td>{{ attendance.date.strftime('%Y-%m-%d') }}</td>
-                                <td>{{ attendance.course.name }}</td>
-                                <td>
-                                    <span class="badge {% if attendance.status == 'present' %}bg-success{% elif attendance.status == 'absent' %}bg-danger{% else %}bg-warning{% endif %}">
-                                        {{ attendance.status|title }}
-                                    </span>
-                                </td>
-                                <td>{{ attendance.faculty.name }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+
+            <!-- Course-wise Attendance -->
+            {% for course_name, stats in attendance_stats.items() %}
+            <div class="card stats-card">
+                <h3>{{ course_name }}</h3>
+                <div class="grade grade-{{ stats.grade }}">Grade {{ stats.grade }}</div>
+                <div class="progress-bar">
+                    <div class="progress" style="width: {{ stats.percentage }}%"></div>
+                </div>
+                <div class="attendance-info">
+                    <span>{{ stats.present }} Present</span>
+                    <span>{{ stats.total }} Total</span>
+                    <span>{{ stats.percentage }}%</span>
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <h3>Quick Actions</h3>
+                <div class="quick-actions">
+                    <a href="#" class="action-btn" onclick="viewTimetable()">View Today's Classes</a>
+                    <a href="#" class="action-btn" onclick="downloadReport()">Download Report</a>
+                    <a href="#" class="action-btn" onclick="showUpdatePassword()">Update Password</a>
+                    <a href="#" class="action-btn" onclick="contactFaculty()">Contact Faculty</a>
+                </div>
+            </div>
+
+            <!-- Upcoming Classes -->
+            <div class="card">
+                <h3>Upcoming Classes</h3>
+                <div class="upcoming-classes">
+                    <!-- Add dynamic upcoming classes here -->
+                    <p>Loading schedule...</p>
+                </div>
+            </div>
+
+            <!-- Attendance Calendar -->
+            <div class="card">
+                <h3>This Month's Attendance</h3>
+                <div class="calendar">
+                    <!-- Will be populated by JavaScript -->
                 </div>
             </div>
         </div>
     </div>
+
+    <div class="tab-content" id="attendance-history">
+        <div class="card">
+            <h3>Attendance History</h3>
+            <table class="attendance-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Course</th>
+                        <th>Status</th>
+                        <th>Marked By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record, course in attendance_records %}
+                    <tr>
+                        <td>{{ record.date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ course.name }}</td>
+                        <td class="{{ record.status }}">{{ record.status|title }}</td>
+                        <td>{{ record.marked_by }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="tab-content" id="profile">
+        <div class="card">
+            <h3>Student Profile</h3>
+            <div class="profile-info">
+                <p><strong>Name:</strong> {{ student.name }}</p>
+                <p><strong>Roll Number:</strong> {{ student.roll_number }}</p>
+                <p><strong>Course:</strong> {{ student.course }}</p>
+            </div>
+            <div class="password-update">
+                <h4>Update Password</h4>
+                <form id="password-form" onsubmit="updatePassword(event)">
+                    <input type="password" id="new-password" placeholder="New Password" required>
+                    <button type="submit">Update Password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="timetable">
+        <div class="card">
+            <h3>Weekly Timetable</h3>
+            <div class="timetable-grid">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="notifications">
+        <div class="card">
+            <h3>Notifications</h3>
+            <div class="notifications-list">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
 </div>
+
+{% block styles %}
+<style>
+    .welcome-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+    }
+    .welcome-header h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        color: #ffd700;
+    }
+    .student-info {
+        font-size: 1.1rem;
+        color: #ccc;
+    }
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        padding: 20px;
+    }
+    .card {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 20px;
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+    }
+    .stats-card {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+    .stat-item {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+    }
+    .stat-item span {
+        font-size: 0.9em;
+        color: #ccc;
+    }
+    .stat-item h2 {
+        margin: 10px 0 0 0;
+        color: #ffd700;
+    }
+    .progress-bar {
+        width: 100%;
+        height: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 5px;
+        overflow: hidden;
+    }
+    .progress {
+        height: 100%;
+        background: #ffd700;
+        transition: width 0.5s ease;
+    }
+    .attendance-info {
+        display: flex;
+        justify-content: space-between;
+        color: #ccc;
+        font-size: 0.9em;
+    }
+    .grade {
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+    .grade-A { background: #4CAF50; }
+    .grade-B { background: #2196F3; }
+    .grade-C { background: #FFC107; }
+    .grade-D { background: #F44336; }
+    .quick-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .action-btn {
+        padding: 10px 15px;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    .action-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    .calendar {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 5px;
+        margin-top: 15px;
+    }
+    .calendar-day {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 5px;
+        font-size: 0.8em;
+    }
+    .present { background: rgba(76, 175, 80, 0.3); }
+    .absent { background: rgba(244, 67, 54, 0.3); }
+    .attendance-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+    .attendance-table th,
+    .attendance-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .attendance-table th {
+        background: rgba(255, 255, 255, 0.05);
+        font-weight: 600;
+    }
+    .attendance-table tr:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+    .tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 10px;
+    }
+    .tab {
+        padding: 8px 16px;
+        border: none;
+        background: none;
+        color: #ccc;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+    .tab:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+    .tab.active {
+        background: #ffd700;
+        color: #000;
+    }
+    .tab-content {
+        display: none;
+    }
+    .tab-content.active {
+        display: block;
+    }
+    .profile-info {
+        margin-bottom: 20px;
+    }
+    .profile-info p {
+        margin: 10px 0;
+    }
+    .password-update {
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .password-update input {
+        width: 100%;
+        padding: 8px;
+        margin: 10px 0;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+        color: white;
+    }
+    .password-update button {
+        padding: 8px 16px;
+        background: #ffd700;
+        border: none;
+        border-radius: 4px;
+        color: #000;
+        cursor: pointer;
+    }
+    .password-update button:hover {
+        background: #ffed4a;
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.tab).classList.add('active');
+        });
+    });
+
+    // Password update
+    async function updatePassword(event) {
+        event.preventDefault();
+        const password = document.getElementById('new-password').value;
+        try {
+            const response = await fetch('/student/update-password', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `new_password=${encodeURIComponent(password)}`
+            });
+            const result = await response.json();
+            alert(result.message || result.error);
+            if (response.ok) {
+                document.getElementById('password-form').reset();
+            }
+        } catch (error) {
+            alert('Error updating password');
+        }
+    }
+
+    // Theme toggle
+    document.querySelector('.theme-toggle').addEventListener('click', function() {
+        document.body.classList.toggle('dark-mode');
+        this.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+    });
+
+    // Populate calendar
+    function populateCalendar() {
+        const calendar = document.querySelector('.calendar');
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        
+        // Add day headers
+        days.forEach(day => {
+            const dayEl = document.createElement('div');
+            dayEl.className = 'calendar-day';
+            dayEl.textContent = day;
+            calendar.appendChild(dayEl);
+        });
+
+        // Add month days
+        const today = new Date();
+        const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+        
+        for (let i = 1; i <= daysInMonth; i++) {
+            const dayEl = document.createElement('div');
+            dayEl.className = 'calendar-day';
+            dayEl.textContent = i;
+            
+            // Random attendance status for demo
+            if (i < today.getDate()) {
+                dayEl.classList.add(Math.random() > 0.2 ? 'present' : 'absent');
+            }
+            
+            calendar.appendChild(dayEl);
+        }
+    }
+
+    // Initialize
+    populateCalendar();
+
+    // Placeholder functions
+    function viewTimetable() {
+        document.querySelector('[data-tab="timetable"]').click();
+    }
+
+    function downloadReport() {
+        alert('Generating attendance report...');
+    }
+
+    function showUpdatePassword() {
+        document.querySelector('[data-tab="profile"]').click();
+        document.getElementById('new-password').focus();
+    }
+
+    function contactFaculty() {
+        alert('Opening faculty contact list...');
+    }
+</script>
+{% endblock %}
+
 {% endblock %}

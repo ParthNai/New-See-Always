@@ -1,56 +1,654 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <h2>Faculty Dashboard</h2>
-        <div class="card mt-4">
-            <div class="card-header">
-                <h4>Mark Attendance</h4>
-            </div>
-            <div class="card-body">
-                <form method="POST" action="{{ url_for('mark_attendance') }}">
-                    <div class="mb-3">
-                        <label for="course" class="form-label">Select Course</label>
-                        <select class="form-select" id="course" name="course_id" required>
-                            {% for course in courses %}
-                            <option value="{{ course.id }}">{{ course.name }}</option>
-                            {% endfor %}
-                        </select>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Welcome, {{ faculty.name }}</h2>
+            <p class="text-muted mb-0">Department: {{ faculty.department }}</p>
+        </div>
+        <div>
+            <input type="date" class="form-control" id="dateSelector" value="{{ today }}" onchange="updateTimetable(this.value)">
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs mb-4" id="facultyTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab">
+                <i class="fas fa-home"></i> Dashboard
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="attendance-tab" data-bs-toggle="tab" data-bs-target="#attendance" type="button" role="tab">
+                <i class="fas fa-clipboard-check"></i> Mark Attendance
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports" type="button" role="tab">
+                <i class="fas fa-chart-bar"></i> Attendance Reports
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="timetable-tab" data-bs-toggle="tab" data-bs-target="#timetable" type="button" role="tab">
+                <i class="fas fa-calendar-alt"></i> Full Timetable
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab">
+                <i class="fas fa-user"></i> Profile
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="facultyTabContent">
+        <!-- Dashboard Tab -->
+        <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
+            <div class="row">
+                <!-- Quick Stats -->
+                <div class="col-md-12 mb-4">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h6 class="card-title">Today's Classes</h6>
+                                    <h3 class="mb-0">{{ timetable|length }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h6 class="card-title">Students Present</h6>
+                                    <h3 class="mb-0">25/30</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <h6 class="card-title">Total Hours</h6>
+                                    <h3 class="mb-0">4 hrs</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <h6 class="card-title">Upcoming Tests</h6>
+                                    <h3 class="mb-0">2</h3>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Students</label>
+                </div>
+
+                <!-- Main Content -->
+                <div class="col-md-8">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light">
+                            <h4 class="mb-0">{{ faculty.department }} Students</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 20%">Enrollment No.</th>
+                                            <th style="width: 60%">Name</th>
+                                            <th style="width: 20%" class="text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for student in students %}
+                                        <tr>
+                                            <td class="align-middle enrollment-no">{{ student.enrollment }}</td>
+                                            <td class="align-middle student-name">{{ student.name|lower }}</td>
+                                            <td class="text-center">
+                                                <button class="btn btn-sm btn-primary" onclick="markAttendance('{{ student.enrollment }}')">
+                                                    <i class="fas fa-check-circle"></i> Mark
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timetable -->
+                <div class="col-md-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-2">
+                            <h5 class="mb-0">Today's Schedule</h5>
+                            <span class="badge bg-light text-primary" id="currentTime"></span>
+                        </div>
+                        <div class="card-body p-0" id="timetableContent">
+                            {% if timetable %}
+                                <div class="list-group list-group-flush">
+                                    {% for slot in timetable %}
+                                    <div class="list-group-item py-2 px-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">{{ slot.Time }}</small>
+                                            <span class="badge bg-light text-primary">{{ slot.Subject }}</span>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted m-3 mb-0">No schedule available for today.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mark Attendance Tab -->
+        <div class="tab-pane fade" id="attendance" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Mark Attendance</h4>
+                </div>
+                <div class="card-body">
+                    <form id="attendanceForm">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Select Subject</label>
+                                <select class="form-select" required>
+                                    <option value="">Choose...</option>
+                                    {% for slot in timetable %}
+                                    <option value="{{ slot.Subject }}">{{ slot.Subject }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Date</label>
+                                <input type="date" class="form-control" required value="{{ today }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Time Slot</label>
+                                <select class="form-select" required>
+                                    <option value="">Choose...</option>
+                                    {% for slot in timetable %}
+                                    <option value="{{ slot.Time }}">{{ slot.Time }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>Roll Number</th>
-                                        <th>Name</th>
-                                        <th>Status</th>
+                                        <th style="width: 20%">Enrollment No.</th>
+                                        <th style="width: 60%">Name</th>
+                                        <th style="width: 20%" class="text-center">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for student in students %}
                                     <tr>
-                                        <td>{{ student.roll_number }}</td>
-                                        <td>{{ student.name }}</td>
-                                        <td>
-                                            <select class="form-select" name="status_{{ student.id }}">
-                                                <option value="present">Present</option>
-                                                <option value="absent">Absent</option>
-                                                <option value="late">Late</option>
-                                            </select>
+                                        <td class="align-middle enrollment-no">{{ student.enrollment }}</td>
+                                        <td class="align-middle student-name">{{ student.name|lower }}</td>
+                                        <td class="text-center align-middle">
+                                            <div class="btn-group" role="group">
+                                                <input type="radio" class="btn-check" name="attendance_{{ student.enrollment }}" id="present_{{ student.enrollment }}" value="present">
+                                                <label class="btn btn-outline-success btn-sm" for="present_{{ student.enrollment }}">Present</label>
+                                                
+                                                <input type="radio" class="btn-check" name="attendance_{{ student.enrollment }}" id="absent_{{ student.enrollment }}" value="absent">
+                                                <label class="btn btn-outline-danger btn-sm" for="absent_{{ student.enrollment }}">Absent</label>
+                                            </div>
                                         </td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         </div>
+                        <div class="text-end mt-3">
+                            <button type="submit" class="btn btn-primary">Save Attendance</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Reports Tab -->
+        <div class="tab-pane fade" id="reports" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Attendance Reports</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Select Subject</label>
+                            <select class="form-select" id="subjectSelect" onchange="updateCharts()">
+                                <option value="">All Subjects</option>
+                                {% for slot in timetable %}
+                                <option value="{{ slot.Subject }}">{{ slot.Subject }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Date Range</label>
+                            <div class="input-group">
+                                <input type="date" class="form-control" id="startDate" value="{{ today }}" onchange="updateCharts()">
+                                <span class="input-group-text">to</span>
+                                <input type="date" class="form-control" id="endDate" value="{{ today }}" onchange="updateCharts()">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">&nbsp;</label>
+                            <button class="btn btn-primary d-block w-100" onclick="updateCharts()">Generate Report</button>
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-primary">Submit Attendance</button>
-                </form>
+
+                    <!-- Graphs Section -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Attendance Overview</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="attendancePieChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Student-wise Attendance</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="attendanceBarChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Table Section -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th style="width: 15%">Enrollment No.</th>
+                                    <th style="width: 35%">Name</th>
+                                    <th style="width: 10%" class="text-center">Total Classes</th>
+                                    <th style="width: 10%" class="text-center">Present</th>
+                                    <th style="width: 10%" class="text-center">Absent</th>
+                                    <th style="width: 10%" class="text-center">Percentage</th>
+                                    <th style="width: 10%" class="text-center">Grade</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td class="align-middle enrollment-no">{{ student.enrollment }}</td>
+                                    <td class="align-middle student-name">{{ student.name|lower }}</td>
+                                    <td class="text-center align-middle">30</td>
+                                    <td class="text-center align-middle text-success">25</td>
+                                    <td class="text-center align-middle text-danger">5</td>
+                                    <td class="text-center align-middle">83.33%</td>
+                                    <td class="text-center align-middle">
+                                        <span class="badge bg-success">A</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Full Timetable Tab -->
+        <div class="tab-pane fade" id="timetable" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Weekly Timetable</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Monday</th>
+                                    <th>Tuesday</th>
+                                    <th>Wednesday</th>
+                                    <th>Thursday</th>
+                                    <th>Friday</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="timetable-cell">10:30 TO 11:30</td>
+                                    <td class="timetable-cell"></td>
+                                    <td class="timetable-cell"></td>
+                                    <td class="timetable-cell"></td>
+                                    <td class="timetable-cell"></td>
+                                    <td class="timetable-cell">
+                                        <span class="subject-name">IPDC(SJC)</span>
+                                        <span class="room-number">B-009</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="timetable-cell">11:30 TO 12:30</td>
+                                    <td class="timetable-cell">
+                                        <span class="subject-name">CEM(SJC)</span>
+                                        <span class="room-number">B-008</span>
+                                    </td>
+                                    <td class="timetable-cell"></td>
+                                    <td class="timetable-cell"></td>
+                                    <td class="timetable-cell"></td>
+                                    <td class="timetable-cell">
+                                        <span class="subject-name">IPDC(SJC)</span>
+                                        <span class="room-number">B-009</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="timetable-cell">1:00 TO 2:00</td>
+                                    <td class="timetable-cell">
+                                        <span class="subject-name">IPDC(SJC)</span>
+                                        <span class="room-number">B-109</span>
+                                    </td>
+                                    <td class="timetable-cell">
+                                        <span class="subject-name">CEM(SJC)4A1</span>
+                                        <span class="room-number">B-105</span>
+                                    </td>
+                                    <td class="timetable-cell">
+                                        <span class="subject-name">CEM(SJC)</span>
+                                        <span class="room-number">B-011</span>
+                                    </td>
+                                    <td class="timetable-cell"></td>
+                                    <td class="timetable-cell"></td>
+                                </tr>
+                                <tr>
+                                    <td class="timetable-cell">2:00 TO 3:00</td>
+                                    <td class="timetable-cell">
+                                        <span class="subject-name">IPDC(SJC)</span>
+                                        <span class="room-number">B-109</span>
+                                    </td>
+                                    <td class="timetable-cell"></td>
+                                    <td class="timetable-cell"></td>
+                                    <td class="timetable-cell"></td>
+                                    <td class="timetable-cell"></td>
+                                </tr>
+                                <tr>
+                                    <td class="timetable-cell">3:00 TO 4:00</td>
+                                    <td class="timetable-cell"></td>
+                                    <td class="timetable-cell"></td>
+                                    <td class="timetable-cell"></td>
+                                    <td class="timetable-cell">
+                                        <span class="subject-name">CEM(SJC)</span>
+                                        <span class="room-number">B-011</span>
+                                    </td>
+                                    <td class="timetable-cell"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Tab -->
+        <div class="tab-pane fade" id="profile" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Faculty Profile</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-4">
+                            <img src="https://via.placeholder.com/150" class="rounded-circle mb-3" alt="Profile Picture">
+                            <h4>{{ faculty.name }}</h4>
+                            <p class="text-muted">{{ faculty.department }} Department</p>
+                        </div>
+                        <div class="col-md-8">
+                            <form id="profileForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" value="{{ faculty.name }}" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" value="{{ current_user.email }}" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Department</label>
+                                    <input type="text" class="form-control" value="{{ faculty.department }}" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Change Password</label>
+                                    <input type="password" class="form-control" placeholder="Enter new password">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Confirm Password</label>
+                                    <input type="password" class="form-control" placeholder="Confirm new password">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Update Password</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .student-name {
+        color: #000000;
+        font-weight: 500;
+        font-size: 0.95rem;
+        white-space: nowrap;
+        text-transform: capitalize;
+    }
+    .enrollment-no {
+        color: #000000;
+        font-weight: 500;
+    }
+    .table thead th {
+        background-color: #f8f9fa;
+        color: #000000;
+        font-weight: 600;
+    }
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    .timetable-cell {
+        padding: 10px;
+        vertical-align: middle;
+    }
+    .timetable-cell:not(:empty) {
+        background-color: #f0f7ff;
+        border: 1px solid #cce5ff;
+        font-weight: 500;
+    }
+    .subject-name {
+        color: #000000;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    .room-number {
+        color: #2196F3;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: block;
+        margin-top: 2px;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Update current time every minute
+function updateCurrentTime() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true 
+    });
+    document.getElementById('currentTime').textContent = timeString;
+}
+
+updateCurrentTime();
+setInterval(updateCurrentTime, 60000);
+
+function updateTimetable(date) {
+    fetch(`/faculty/timetable/${date}`)
+        .then(response => response.json())
+        .then(data => {
+            const timetableContent = document.getElementById('timetableContent');
+            if (data.timetable && data.timetable.length > 0) {
+                let html = '<div class="list-group list-group-flush">';
+                data.timetable.forEach(slot => {
+                    html += `
+                        <div class="list-group-item py-2 px-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">${slot.Time}</small>
+                                <span class="badge bg-light text-primary">${slot.Subject}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                timetableContent.innerHTML = html;
+            } else {
+                timetableContent.innerHTML = '<p class="text-muted m-3 mb-0">No schedule available for this date.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('timetableContent').innerHTML = 
+                '<p class="text-danger m-3 mb-0">Error loading schedule. Please try again.</p>';
+        });
+}
+
+function markAttendance(enrollment) {
+    // TODO: Implement attendance marking functionality
+    alert('Attendance marking will be implemented soon for student: ' + enrollment);
+}
+
+// Handle attendance form submission
+document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    // TODO: Implement attendance saving
+    alert('Attendance will be saved to the database');
+});
+
+// Handle profile form submission
+document.getElementById('profileForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    // TODO: Implement password update
+    alert('Password will be updated');
+});
+
+// Initialize charts
+let pieChart = null;
+let barChart = null;
+
+function initializeCharts() {
+    // Pie Chart
+    const pieCtx = document.getElementById('attendancePieChart').getContext('2d');
+    pieChart = new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Present', 'Absent'],
+            datasets: [{
+                data: [25, 5],
+                backgroundColor: ['#28a745', '#dc3545'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                title: {
+                    display: true,
+                    text: 'Overall Attendance'
+                }
+            }
+        }
+    });
+
+    // Bar Chart
+    const barCtx = document.getElementById('attendanceBarChart').getContext('2d');
+    barChart = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            datasets: [{
+                label: 'Attendance %',
+                data: [85, 90, 75, 83],
+                backgroundColor: '#007bff',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Weekly Attendance Trend'
+                }
+            }
+        }
+    });
+}
+
+function updateCharts() {
+    // Get selected values
+    const subject = document.getElementById('subjectSelect').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    // TODO: Fetch actual data based on selection
+    // For now, update with random data
+    if (pieChart) {
+        const present = Math.floor(Math.random() * 20) + 10;
+        const absent = 30 - present;
+        pieChart.data.datasets[0].data = [present, absent];
+        pieChart.update();
+    }
+
+    if (barChart) {
+        barChart.data.datasets[0].data = [
+            Math.floor(Math.random() * 30) + 70,
+            Math.floor(Math.random() * 30) + 70,
+            Math.floor(Math.random() * 30) + 70,
+            Math.floor(Math.random() * 30) + 70
+        ];
+        barChart.update();
+    }
+}
+
+// Initialize charts when the reports tab is shown
+document.querySelector('button[data-bs-target="#reports"]').addEventListener('click', function() {
+    setTimeout(() => {
+        if (!pieChart || !barChart) {
+            initializeCharts();
+        }
+    }, 200);
+});
+</script>
 {% endblock %}

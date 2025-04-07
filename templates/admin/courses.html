@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Department Students</h2>
+
+    <!-- EC Department -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>E.C. Dept., Govt. Polytechnic, Palanpur</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Sr no</th>
+                            <th>Enrollment No.</th>
+                            <th>Student Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in ec_students %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ student.enrollment }}</td>
+                            <td>{{ student.name }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ICT Department -->
+    <div class="card">
+        <div class="card-header">
+            <h3>ICT Dept., Govt. Polytechnic, Palanpur</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Sr no</th>
+                            <th>Enrollment No.</th>
+                            <th>Student Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in ict_students %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ student.enrollment }}</td>
+                            <td>{{ student.name }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
