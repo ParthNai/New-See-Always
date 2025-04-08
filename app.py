@@ -329,10 +329,41 @@ def faculty_dashboard():
         ]
     else:
         students = [
-            {"enrollment": "236260332001", "name": "ACHARYA MILAP MUKESHBHAI"},
-            {"enrollment": "236260332004", "name": "BHAVSAR PRACHI SNEHALKUMAR"},
-            {"enrollment": "236260332006", "name": "CHANDARANA HARSHKUMAR CHANDRAKANTBHAI"}
-        ]
+        {"enrollment": "236260332001", "name": "ACHARYA MILAP MUKESHBHAI"},
+        {"enrollment": "236260332004", "name": "BHAVSAR PRACHI SNEHALKUMAR"},
+        {"enrollment": "236260332006", "name": "CHANDARANA HARSHKUMAR CHANDRAKANTBHAI"},
+        {"enrollment": "236260332007", "name": "CHAROLIYA MAYSAMALI ARIDALI"},
+        {"enrollment": "236260332008", "name": "CHAUDHARI SHAILESHBHAI RAMESHBHAI"},
+        {"enrollment": "236260332018", "name": "GAJJAR DEVANGSHI PRAKISHBHAI"},
+        {"enrollment": "236260332020", "name": "GAUSWAMI JAYESHBHAI ASHOKBHAI"},
+        {"enrollment": "236260332021", "name": "GHASURA HAMZA MAHAMAD ARIF"},
+        {"enrollment": "236260332022", "name": "GOHIL TRUPTI ALPESHBHAI"},
+        {"enrollment": "236260332024", "name": "JASALIYA SHRADDHDHA ASHOKBHAI"},
+        {"enrollment": "236260332028", "name": "KURESHI MAHAMMADSEZAM SADIKBHAI"},
+        {"enrollment": "236260332029", "name": "MAMDNIYA ARMAN IMRANBHAI"},
+        {"enrollment": "236260332030", "name": "MEVADA AAHYKUMAR MUKESHKUMAR"},
+        {"enrollment": "236260332031", "name": "MEVADA DIVYA VIPULBHAI"},
+        {"enrollment": "236260332033", "name": "MODI CHARU BHARATKUMAR"},
+        {"enrollment": "236260332034", "name": "MODI HARSHIL MAHENDRAKUMAR"},
+        {"enrollment": "236260332035", "name": "NAI PARTH ANILBHAI"},
+        {"enrollment": "236260332038", "name": "PANCHAL NISHTHABEN YOGESHBHAI"},
+        {"enrollment": "236260332039", "name": "PANCHAL POOJA NAVINBHAI"},
+        {"enrollment": "236260332040", "name": "PARHADIYA IMRANBHAI HAMIDBHAI"},
+        {"enrollment": "236260332041", "name": "PARMAR DHAVALKUMAR DAHYABHAI"},
+        {"enrollment": "236260332042", "name": "PARMAR KRUSHNAKPALSINH VIJAYSINH"},
+        {"enrollment": "236260332043", "name": "PATEL HEET HARESHBHAI"},
+        {"enrollment": "236260332045", "name": "PATEL MANISHBEN SHAILESHBHAI"},
+        {"enrollment": "236260332047", "name": "PATEL SAURAV NEETABEN RAJESHBHAI"},
+        {"enrollment": "236260332056", "name": "RAVAL DEV SURESHKUMAR"},
+        {"enrollment": "236260332059", "name": "SUTHAR ANIL KUMAR HARESH BHAI"},
+        {"enrollment": "236260332060", "name": "THAKKAR DARSHAN JAGDISHBHAI"},
+        {"enrollment": "236260332061", "name": "THAKOR RIDHI RAMESHJI"},
+        {"enrollment": "236260332005", "name": "CHAUHAN PRUTHVI VIRALKUMAR"},
+        {"enrollment": "236260332009", "name": "MENAT TANISH SOMABHAI"},
+        {"enrollment": "236260332023", "name": "SHEIKH ZIDAN SADIKAHAMAD"},
+        {"enrollment": "236260332024", "name": "SOLANKI KRISH SURESHBHAI"},
+        {"enrollment": "236260332029", "name": "VYASG KAUSHIK A"}
+    ]
     
     # Get today's timetable for the faculty
     today = datetime.now()
