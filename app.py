@@ -1,10 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, User, Student, Faculty, Course, Attendance
+from models import db, User, Student, Faculty, Course, Attendance, Parent, OTP
 from datetime import datetime
-import pandas as pd
 import os
+import random
+import string
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
@@ -141,8 +142,33 @@ def create_initial_faculty():
                         )
                         db.session.add(attendance)
             
+            # Create test parent account
+            parent_user = User.query.filter_by(username='parent1').first()
+            if not parent_user:
+                parent_user = User(
+                    username='parent1',
+                    email='parent1@test.com',
+                    role='parent',
+                    phone_number='6351141728'
+                )
+                parent_user.set_password('parent123')
+                db.session.add(parent_user)
+                db.session.flush()
+
+                parent = Parent(
+                    user_id=parent_user.id,
+                    name='Test Parent',
+                    phone_number='9876543210'
+                )
+                db.session.add(parent)
+                db.session.flush()
+
+                # Link student to parent
+                student.parent_id = parent.id
+                db.session.add(student)
+
             db.session.commit()
-            print("Successfully created student and attendance records")
+            print("Successfully created student, parent, and attendance records")
         
         return True
     except Exception as e:
@@ -398,12 +424,6 @@ def update_student_password():
     
     return jsonify({'message': 'Password updated successfully!'}), 200
 
-@app.route('/parent')
-@login_required
-def parent_dashboard():
-    if current_user.role != 'parent':
-        return redirect(url_for('index'))
-    return render_template('parent/dashboard.html')
 
 @app.route('/mark-attendance', methods=['POST'])
 @login_required
@@ -796,6 +816,104 @@ def student_register():
         return redirect(url_for('login'))
     
     return render_template('student/register.html')
+
+@app.route('/parent/login', methods=['GET', 'POST'])
+def parent_login():
+    if request.method == 'POST':
+        phone_number = request.form.get('phone_number')
+        if not phone_number:
+            flash('Please enter your phone number', 'error')
+            return redirect(url_for('parent_login'))
+
+        # Generate and save OTP
+        otp = OTP(phone_number=phone_number)
+        db.session.add(otp)
+        db.session.commit()
+
+        # In a real application, you would send the OTP via SMS
+        # For now, we'll just show it in the flash message
+        flash(f'Your OTP is: {otp.otp_code}', 'info')
+        session['phone_number'] = phone_number
+        return redirect(url_for('verify_otp'))
+
+    return render_template('parent_login.html')
+
+@app.route('/verify-otp', methods=['GET', 'POST'])
+def verify_otp():
+    if 'phone_number' not in session:
+        return redirect(url_for('parent_login'))
+
+    if request.method == 'POST':
+        otp_code = request.form.get('otp')
+        phone_number = session['phone_number']
+
+        otp = OTP.query.filter_by(
+            phone_number=phone_number,
+            otp_code=otp_code,
+            is_verified=False
+        ).order_by(OTP.created_at.desc()).first()
+
+        if not otp or not otp.is_valid():
+            flash('Invalid or expired OTP', 'error')
+            return redirect(url_for('verify_otp'))
+
+        # Mark OTP as verified
+        otp.is_verified = True
+        db.session.commit()
+
+        # Check if parent exists, if not create one
+        parent = Parent.query.filter_by(phone_number=phone_number).first()
+        if not parent:
+            # Create user account
+            user = User(
+                username=f'parent_{phone_number}',
+                email=f'parent_{phone_number}@example.com',  # placeholder email
+                role='parent',
+                phone_number=phone_number
+            )
+            user.set_password(otp_code)  # use OTP as initial password
+            db.session.add(user)
+            db.session.flush()
+
+            # Create parent record
+            parent = Parent(
+                user_id=user.id,
+                name=f'Parent {phone_number}',  # placeholder name
+                phone_number=phone_number
+            )
+            db.session.add(parent)
+            db.session.commit()
+        
+        # Log in the parent
+        user = User.query.get(parent.user_id)
+        login_user(user)
+        session.pop('phone_number', None)
+
+        flash('Successfully logged in!', 'success')
+        return redirect(url_for('parent_dashboard'))
+
+    return render_template('verify_otp.html')
+
+@app.route('/parent/dashboard')
+@login_required
+def parent_dashboard():
+    if current_user.role != 'parent':
+        flash('Access denied', 'error')
+        return redirect(url_for('index'))
+
+    parent = Parent.query.filter_by(user_id=current_user.id).first()
+    students = parent.students
+    attendance_records = {}
+
+    for student in students:
+        attendance = Attendance.query.filter_by(student_id=student.id)\
+            .order_by(Attendance.date.desc())\
+            .limit(10).all()
+        attendance_records[student.id] = attendance
+
+    return render_template('parent_dashboard.html',
+                          students=students,
+                          attendance_records=attendance_records)
 
 if __name__ == '__main__':
     with app.app_context():
